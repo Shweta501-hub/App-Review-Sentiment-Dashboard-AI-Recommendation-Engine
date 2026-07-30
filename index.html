@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Review Sentiment & Recommendation Dashboard</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for smooth data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-brain-circuit brand-icon"></i>
+                <div class="brand-text">
+                    <h2>SentimentAI</h2>
+                    <span>Review Analytics</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#overview" class="nav-item active">
+                    <i class="fa-solid fa-chart-pie"></i> Executive Overview
+                </a>
+                <a href="#recommendations" class="nav-item">
+                    <i class="fa-solid fa-bolt-lightning"></i> AI Recommendations
+                </a>
+                <a href="#aspects" class="nav-item">
+                    <i class="fa-solid fa-layer-group"></i> Aspect Breakdown
+                </a>
+                <a href="#reviews" class="nav-item">
+                    <i class="fa-solid fa-comments"></i> User Reviews
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot online"></span>
+                    <span class="status-text">Flask API Online</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header Bar -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1>App Review Sentiment Dashboard</h1>
+                    <p>Powered by DistilBERT NLP & Urgency Recommendation Engine</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-trigger-analysis">
+                        <i class="fa-solid fa-rotate-right"></i> Run AI Analysis
+                    </button>
+                    <button class="btn btn-primary" id="btn-open-modal">
+                        <i class="fa-solid fa-plus"></i> Add Review
+                    </button>
+                </div>
+            </header>
+
+            <!-- KPI Cards Grid -->
+            <section class="kpi-grid" id="overview">
+                <div class="kpi-card">
+                    <div class="kpi-icon blue">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Total Reviews</span>
+                        <h3 id="stat-total-reviews">--</h3>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon gold">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Average Rating</span>
+                        <h3 id="stat-avg-rating">--</h3>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon purple">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Net Sentiment Score (NSS)</span>
+                        <h3 id="stat-nss">--</h3>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon red">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Urgent Issues</span>
+                        <h3 id="stat-urgent-issues">--</h3>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section Grid -->
+            <section class="charts-grid">
+                <div class="chart-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-donut"></i> Sentiment Distribution</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card" id="aspects">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-layer-group"></i> Aspect Complaints Breakdown</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="aspectChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Priority Recommendations Panel -->
+            <section class="section-container" id="recommendations">
+                <div class="card-header flex-between">
+                    <div>
+                        <h3><i class="fa-solid fa-robot"></i> Actionable AI Recommendations</h3>
+                        <p class="section-subtext">Ranked by Urgency Score: Negative Count &times; (5 - Avg Rating)</p>
+                    </div>
+                    <span class="badge badge-purple" id="rec-count-badge">0 Insights</span>
+                </div>
+                <div class="recommendations-grid" id="recommendations-container">
+                    <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading AI insights...</div>
+                </div>
+            </section>
+
+            <!-- Reviews Table Section -->
+            <section class="section-container" id="reviews">
+                <div class="card-header flex-between">
+                    <h3><i class="fa-solid fa-list-check"></i> Processed App Reviews Feed</h3>
+                    <div class="table-filters">
+                        <select id="filter-aspect" class="select-input">
+                            <option value="ALL">All Aspects</option>
+                            <option value="Bug / Crash">Bug / Crash</option>
+                            <option value="Performance / Speed">Performance / Speed</option>
+                            <option value="UI / UX">UI / UX</option>
+                            <option value="Pricing / Subscription">Pricing / Subscription</option>
+                            <option value="Feature Request">Feature Request</option>
+                        </select>
+                        <select id="filter-sentiment" class="select-input">
+                            <option value="ALL">All Sentiments</option>
+                            <option value="Positive">Positive</option>
+                            <option value="Negative">Negative</option>
+                            <option value="Neutral">Neutral</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rating</th>
+                                <th>Review Text</th>
+                                <th>Aspect Category</th>
+                                <th>Sentiment</th>
+                                <th>Version</th>
+                                <th>Author</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviews-table-body">
+                            <tr><td colspan="6" class="text-center">Loading reviews dataset...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for Adding New Review -->
+    <div class="modal-overlay" id="add-review-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Add New App Store Review</h3>
+                <button class="close-btn" id="btn-close-modal">&times;</button>
+            </div>
+            <form id="add-review-form">
+                <div class="form-group">
+                    <label for="review-author">Author Name</label>
+                    <input type="text" id="review-author" class="form-input" placeholder="e.g. Alex Johnson" required>
+                </div>
+                <div class="form-group">
+                    <label for="review-rating">Rating (1 to 5 Stars)</label>
+                    <select id="review-rating" class="form-input" required>
+                        <option value="1">1 Star (Worst)</option>
+                        <option value="2">2 Stars (Poor)</option>
+                        <option value="3">3 Stars (Average)</option>
+                        <option value="4">4 Stars (Good)</option>
+                        <option value="5" selected>5 Stars (Excellent)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="review-version">App Version</label>
+                    <input type="text" id="review-version" class="form-input" value="v2.4.0" required>
+                </div>
+                <div class="form-group">
+                    <label for="review-text">Review Comments</label>
+                    <textarea id="review-text" class="form-input" rows="4" placeholder="Type app feedback or bug details..." required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit & Analyze</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
